@@ -74,5 +74,18 @@ def to_voc(annotation_path: str, images_dir: str, output_dir: str) -> int:
     return count
 
 
+def get_all_classes(annotation_path: str) -> List[str]:
+    """
+    获取全部类别名称\n
+    :param annotation_path: 标注文件路径
+    :return: 全部类别名称组成的列表
+    """
+    coco = COCO(annotation_path)
+    cats = coco.loadCats(coco.getCatIds())
+    cats = sorted(cats, key=lambda x: x["id"])
+    return [x["name"] for x in cats]
+
+
 if __name__ == '__main__':
-    to_voc(r"C:\Users\DrZon\Downloads\result.json", r"C:\Users\DrZon\Downloads\output", r"C:\Users\DrZon\Downloads\output")
+    # to_voc(r"C:\Users\DrZon\Downloads\result.json", r"C:\Users\DrZon\Downloads\output", r"C:\Users\DrZon\Downloads\output")
+    print(get_all_classes(r"C:\Users\DrZon\Downloads\result.json"))

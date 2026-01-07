@@ -149,6 +149,25 @@ def to_coco(images_dir: str, annotations_dir: str, classes: List[str], output_pa
     return i
 
 
+def get_all_classes_ids(annotations_dir: str) -> List[int]:
+    """
+    获取全部类ID\n
+    :param annotations_dir: 标注文件所在文件夹
+    :return: 类ID组成的列表
+    """
+    results = set()
+    for file in tqdm(os.listdir(annotations_dir)):
+        if file.lower().endswith(".txt"):
+            fullpath = os.path.join(annotations_dir, file)
+            with open(fullpath, "r") as f:
+                for line in f.readlines():
+                    search_result = re.search(r"^(\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)$", line.strip())
+                    if search_result:
+                        class_id = int(search_result[1])
+                        results.add(class_id)
+    return sorted(list(results))
+
+
 if __name__ == '__main__':
     # to_voc(r"C:\Users\DrZon\Downloads\images", r"C:\Users\DrZon\Downloads\labels", ["Pedestrian", "Cyclist", "Car", "Truck", "Tram", "Tricycle"], r"C:\Users\DrZon\Downloads\output")
     to_coco(r"C:\Users\DrZon\Downloads\images", r"C:\Users\DrZon\Downloads\labels", ["Pedestrian", "Cyclist", "Car", "Truck", "Tram", "Tricycle"], r"C:\Users\DrZon\Downloads\result.json")

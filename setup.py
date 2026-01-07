@@ -8,7 +8,7 @@ with open("./README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 packages = setuptools.find_packages()
 requires_list = open('./requirements.txt', 'r', encoding='utf8').readlines()
-requires_list = [x.strip() for x in requires_list if not x.startswith("setuptools")]
+requires_list = [x.strip() for x in requires_list if (not x.startswith("setuptools")) and (not x.startswith("twine") and (not x.startswith("packaging")))]
 
 
 setuptools.setup(

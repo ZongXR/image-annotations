@@ -2,3 +2,6 @@ numpy
 opencv-python
 tqdm
 pycocotools
+setuptools
+twine==6.2.0
+packaging==25.0

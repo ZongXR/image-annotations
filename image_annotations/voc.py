@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 from typing import List
 import xml.etree.ElementTree as ET
 import json
@@ -142,3 +143,22 @@ def to_coco(annotations_dir: str, classes: List[str], output_path: str) -> int:
             "annotations": annotations
         }, f, indent=4, ensure_ascii=False)
     return i
+
+
+def get_all_classes(annotations_dir: str) -> List[str]:
+    """
+    获取全部类别名称\n
+    :param annotations_dir: 标注文件所在文件夹
+    :return: 全部类别名称组成的列表
+    """
+    results = set()
+    for file in tqdm(os.listdir(annotations_dir)):
+        if file.lower().endswith(".xml"):
+            fullpath = os.path.join(annotations_dir, file)
+            with open(fullpath, "r") as f:
+                results.update(set(re.findall(r"<object>.*?<name>(.*?)</name>.*?</object>", f.read(), re.DOTALL)))
+    return list(results)
+
+
+if __name__ == '__main__':
+    print(get_all_classes(r"C:\Users\DrZon\Desktop"))
