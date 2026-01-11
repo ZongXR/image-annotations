@@ -148,5 +148,8 @@ COCO格式的目标检测标注文件通常以json文件给出，将所有图片
 <tr>
 <td>0.2.0</td><td>新增获取全部类名的功能</td><td>2026年1月7日</td>
 </tr>
+<tr>
+<td>0.2.1</td><td>Updated YOLO to VOC and COCO conversion functions to iterate over image files instead of annotation files, improving robustness for various image formats.</td><td>2026年1月11日</td>
+</tr>
 </table>
 

@@ -13,7 +13,7 @@ from tqdm import tqdm
 import image_annotations
 from image_annotations.exceptions import BadFileException
 from image_annotations.utils import dict2element
-from image_annotations.utils import prefix_name
+from image_annotations.utils import prefix_name, suffix_name
 
 
 def to_voc(images_dir: str, annotations_dir: str, classes: List[str], output_dir: str) -> int:
@@ -27,45 +27,48 @@ def to_voc(images_dir: str, annotations_dir: str, classes: List[str], output_dir
     """
     count = 0
     os.makedirs(output_dir, exist_ok=True)
-    for file in tqdm(os.listdir(annotations_dir)):
-        if file.lower().endswith(".txt"):
-            annotation = dict()
-            annotation["folder"] = os.path.basename(images_dir)
-            annotation["filename"] = prefix_name(file) + ".jpg"
-            annotation["path"] = os.path.join(os.path.abspath(images_dir), annotation["filename"])
-            annotation["source"] = {"database": "Unknown"}
-            height, width, depth = cv2.imdecode(np.fromfile(os.path.join(images_dir, prefix_name(file) + ".jpg"), dtype=np.uint8), -1).shape
-            annotation["size"] = {"width": str(width), "height": str(height), "depth": str(depth)}
-            annotation["segmented"] = "0"
-            annotation["object"] = list()
-            with open(os.path.join(annotations_dir, file), "r") as f:
-                for i, line in enumerate(f.readlines()):
-                    search_result = re.search(r"^(\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)$", line.strip())
-                    if search_result:
-                        try:
-                            class_id = int(search_result[1])
-                            x_center = float(search_result[2]) * width
-                            y_center = float(search_result[3]) * height
-                            w_bbox = float(search_result[4]) * width
-                            h_bbox = float(search_result[5]) * height
-                        except IndexError as e:
-                            raise BadFileException(os.path.join(annotations_dir, file), f"文件第{i+1}行格式有误: {line.strip()}")
-                        name = classes[class_id]
-                        xmin = int(x_center - 0.5 * w_bbox)
-                        xmax = int(x_center + 0.5 * w_bbox)
-                        ymin = int(y_center - 0.5 * h_bbox)
-                        ymax = int(y_center + 0.5 * h_bbox)
-                        annotation["object"].append({
-                            "name": name,
-                            "pose": "Unspecified",
-                            "truncated": "0",
-                            "difficult": "0",
-                            "bndbox": {"xmin": str(xmin), "ymin": str(ymin), "xmax": str(xmax), "ymax": str(ymax)}
-                        })
-            xml = parseString(tostring(dict2element("annotation", annotation))).toprettyxml(indent="\t")
-            with open(os.path.join(output_dir, f"{prefix_name(file)}.xml"), "w") as f:
-                f.write(xml)
-            count = count + 1
+    for image in tqdm(os.listdir(images_dir)):
+        if suffix_name(image).lower() in ("jpg", "bmp", "png"):
+            image_path = os.path.join(images_dir, image)
+            annotation_path = os.path.join(annotations_dir, prefix_name(image) + ".txt")
+            if os.path.exists(annotation_path):
+                annotation = dict()
+                annotation["folder"] = os.path.basename(images_dir)
+                annotation["filename"] = image
+                annotation["path"] = image_path
+                annotation["source"] = {"database": "Unknown"}
+                height, width, depth = cv2.imdecode(np.fromfile(image_path, dtype=np.uint8), -1).shape
+                annotation["size"] = {"width": str(width), "height": str(height), "depth": str(depth)}
+                annotation["segmented"] = "0"
+                annotation["object"] = list()
+                with open(annotation_path, "r") as f:
+                    for i, line in enumerate(f.readlines()):
+                        search_result = re.search(r"^(\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)$", line.strip())
+                        if search_result:
+                            try:
+                                class_id = int(search_result[1])
+                                x_center = float(search_result[2]) * width
+                                y_center = float(search_result[3]) * height
+                                w_bbox = float(search_result[4]) * width
+                                h_bbox = float(search_result[5]) * height
+                            except IndexError as e:
+                                raise BadFileException(annotation_path, f"文件第{i+1}行格式有误: {line.strip()}")
+                            name = classes[class_id]
+                            xmin = int(x_center - 0.5 * w_bbox)
+                            xmax = int(x_center + 0.5 * w_bbox)
+                            ymin = int(y_center - 0.5 * h_bbox)
+                            ymax = int(y_center + 0.5 * h_bbox)
+                            annotation["object"].append({
+                                "name": name,
+                                "pose": "Unspecified",
+                                "truncated": "0",
+                                "difficult": "0",
+                                "bndbox": {"xmin": str(xmin), "ymin": str(ymin), "xmax": str(xmax), "ymax": str(ymax)}
+                            })
+                xml = parseString(tostring(dict2element("annotation", annotation))).toprettyxml(indent="\t")
+                with open(os.path.join(output_dir, f"{prefix_name(image)}.xml"), "w") as f:
+                    f.write(xml)
+                count = count + 1
     return count
 
 
@@ -96,48 +99,51 @@ def to_coco(images_dir: str, annotations_dir: str, classes: List[str], output_pa
     annotations = []
     i = 0
     j = 0
-    for file in tqdm(os.listdir(annotations_dir)):
-        if file.lower().endswith(".txt"):
-            height, width, _ = cv2.imdecode(np.fromfile(os.path.join(images_dir, prefix_name(file) + ".jpg"), dtype=np.uint8), -1).shape
-            image = {
-                "id": i,
-                "width": width,
-                "height": height,
-                "file_name": prefix_name(file) + ".jpg",
-                "license": 0,
-                "flickr_url": "https://github.com/ZongXR/image-annotations",
-                "coco_url": "https://github.com/ZongXR/image-annotations",
-                "date_captured": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-            }
-            images.append(image)
-            with open(os.path.join(annotations_dir, file), "r") as f:
-                for line in f.readlines():
-                    search_result = re.search(r"^(\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)$", line.strip())
-                    if search_result:
-                        try:
-                            class_id = int(search_result[1])
-                            x_center = float(search_result[2]) * width
-                            y_center = float(search_result[3]) * height
-                            w_bbox = float(search_result[4]) * width
-                            h_bbox = float(search_result[5]) * height
-                        except IndexError as e:
-                            raise BadFileException(os.path.join(annotations_dir, file), f"文件第{i}行格式有误: {line.strip()}")
-                        xmin = int(x_center - 0.5 * w_bbox)
-                        xmax = int(x_center + 0.5 * w_bbox)
-                        ymin = int(y_center - 0.5 * h_bbox)
-                        ymax = int(y_center + 0.5 * h_bbox)
-                        annotation = {
-                            "id": j,  # 目标对象ID（每个对象ID唯一），每张图片可能有多个目标
-                            "image_id": i,  # 对应图片ID
-                            "category_id": class_id,  # 对应类别ID，与categories中的ID对应
-                            "segmentation": [],  # 实例分割，对象的边界点坐标[x1,y1,x2,y2,....,xn,yn]
-                            "area": (xmax - xmin) * (ymax - ymin),  # 对象区域面积
-                            "bbox": [xmin, ymin, xmax - xmin, ymax - ymin],  # 目标检测，对象定位边框[x,y,w,h]
-                            "iscrowd": 0,  # 表示是否是人群
-                        }
-                        annotations.append(annotation)
-                        j = j + 1
-            i = i + 1
+    for imagename in tqdm(os.listdir(images_dir)):
+        if suffix_name(imagename).lower() in ("jpg", "bmp", "png"):
+            image_path = os.path.join(images_dir, imagename)
+            annotation_path = os.path.join(annotations_dir, prefix_name(imagename) + ".txt")
+            if os.path.exists(annotation_path):
+                height, width, _ = cv2.imdecode(np.fromfile(image_path, dtype=np.uint8), -1).shape
+                image = {
+                    "id": i,
+                    "width": width,
+                    "height": height,
+                    "file_name": imagename,
+                    "license": 0,
+                    "flickr_url": "https://github.com/ZongXR/image-annotations",
+                    "coco_url": "https://github.com/ZongXR/image-annotations",
+                    "date_captured": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+                }
+                images.append(image)
+                with open(annotation_path, "r") as f:
+                    for line in f.readlines():
+                        search_result = re.search(r"^(\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)$", line.strip())
+                        if search_result:
+                            try:
+                                class_id = int(search_result[1])
+                                x_center = float(search_result[2]) * width
+                                y_center = float(search_result[3]) * height
+                                w_bbox = float(search_result[4]) * width
+                                h_bbox = float(search_result[5]) * height
+                            except IndexError as e:
+                                raise BadFileException(annotation_path, f"文件第{i}行格式有误: {line.strip()}")
+                            xmin = int(x_center - 0.5 * w_bbox)
+                            xmax = int(x_center + 0.5 * w_bbox)
+                            ymin = int(y_center - 0.5 * h_bbox)
+                            ymax = int(y_center + 0.5 * h_bbox)
+                            annotation = {
+                                "id": j,  # 目标对象ID（每个对象ID唯一），每张图片可能有多个目标
+                                "image_id": i,  # 对应图片ID
+                                "category_id": class_id,  # 对应类别ID，与categories中的ID对应
+                                "segmentation": [],  # 实例分割，对象的边界点坐标[x1,y1,x2,y2,....,xn,yn]
+                                "area": (xmax - xmin) * (ymax - ymin),  # 对象区域面积
+                                "bbox": [xmin, ymin, xmax - xmin, ymax - ymin],  # 目标检测，对象定位边框[x,y,w,h]
+                                "iscrowd": 0,  # 表示是否是人群
+                            }
+                            annotations.append(annotation)
+                            j = j + 1
+                i = i + 1
     with open(output_path, "w") as f:
         json.dump({
             "info": info,

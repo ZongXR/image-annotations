@@ -50,6 +50,15 @@ def prefix_name(filename: str) -> str:
     return ".".join(result[0:-1])
 
 
+def suffix_name(filename: str) -> str:
+    """
+    获取文件后缀名\n
+    :param filename: 文件名
+    :return: 后缀名
+    """
+    return filename.rsplit(".")[-1]
+
+
 if __name__ == '__main__':
     d = {"filename": "aaa", "folder": "bbb", "size": {"width": 3, "height": 2, "depth": 3}, "object": [{"name": "aaa", "xmin": "bbb"}, {"name": "ccc", "xmin": "ddd"}, [3, 2]]}
     print(tostring(dict2element("annotation", d)))
