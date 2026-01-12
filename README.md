@@ -1,5 +1,12 @@
 <h1><a href="https://github.com/ZongXR/image-annotations" target="_blank">图像标注格式转换器(image-annotations)</a></h1>
 <h2>使用方法</h2>
+<pre>
+from image_annotations import yolo2coco, yolo2voc   # YOLO格式转COCO格式, YOLO格式转VOC格式
+from image_annotations import voc2coco, voc2yolo    # VOC格式转COCO格式, VOC格式转YOLO格式
+from image_annotations import coco2yolo, coco2voc   # COCO格式转YOLO格式, COCO格式转VOC格式
+from image_annotations import yolo_classes_ids, coco_classes, voc_classes # 获取YOLO、COCO、VOC格式的所有类别
+</pre>
+根据需要导入相关函数，按照函数签名及注释填入相关参数即可。参数中<code>**_path</code>表示文件的路径，<code>**_dir</code>表示文件夹路径，均推荐使用绝对路径。
 <h2>标注文件说明</h2>
 <table title="主流标注格式对比">
 <tr>
@@ -150,6 +157,9 @@ COCO格式的目标检测标注文件通常以json文件给出，将所有图片
 </tr>
 <tr>
 <td>0.2.1</td><td>Updated YOLO to VOC and COCO conversion functions to iterate over image files instead of annotation files, improving robustness for various image formats.</td><td>2026年1月11日</td>
+</tr>
+<tr>
+<td>0.2.2</td><td>Exposes conversion functions between YOLO, VOC, and COCO formats, as well as class retrieval utilities, at the package level. </td><td>2026年1月12日</td>
 </tr>
 </table>
 

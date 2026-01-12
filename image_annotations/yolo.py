@@ -13,7 +13,7 @@ from tqdm import tqdm
 import image_annotations
 from image_annotations.exceptions import BadFileException
 from image_annotations.utils import dict2element
-from image_annotations.utils import prefix_name, suffix_name
+from image_annotations.utils import prefix_name, suffix_name, is_image
 
 
 def to_voc(images_dir: str, annotations_dir: str, classes: List[str], output_dir: str) -> int:
@@ -28,7 +28,7 @@ def to_voc(images_dir: str, annotations_dir: str, classes: List[str], output_dir
     count = 0
     os.makedirs(output_dir, exist_ok=True)
     for image in tqdm(os.listdir(images_dir)):
-        if suffix_name(image).lower() in ("jpg", "bmp", "png"):
+        if is_image(image):
             image_path = os.path.join(images_dir, image)
             annotation_path = os.path.join(annotations_dir, prefix_name(image) + ".txt")
             if os.path.exists(annotation_path):
@@ -100,7 +100,7 @@ def to_coco(images_dir: str, annotations_dir: str, classes: List[str], output_pa
     i = 0
     j = 0
     for imagename in tqdm(os.listdir(images_dir)):
-        if suffix_name(imagename).lower() in ("jpg", "bmp", "png"):
+        if is_image(imagename):
             image_path = os.path.join(images_dir, imagename)
             annotation_path = os.path.join(annotations_dir, prefix_name(imagename) + ".txt")
             if os.path.exists(annotation_path):

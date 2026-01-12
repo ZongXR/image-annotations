@@ -16,7 +16,7 @@ setuptools.setup(
     version=image_annotations.__version__,
     author="Xiangrui Zong",
     author_email="zxr@tju.edu.cn",
-    description="一个自由转换图像标注格式的工具",
+    description="图像标注格式转换器，能让你自由转换YOLO、COCO、VOC格式的图像标注文件",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=base_url,

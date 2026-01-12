@@ -59,6 +59,15 @@ def suffix_name(filename: str) -> str:
     return filename.rsplit(".")[-1]
 
 
+def is_image(filename: str) -> bool:
+    """
+    根据文件名判断文件是否是图片\n
+    :param filename: 文件名
+    :return: 是否是图片
+    """
+    return suffix_name(filename).lower() in ("jpg", "bmp", "png")
+
+
 if __name__ == '__main__':
     d = {"filename": "aaa", "folder": "bbb", "size": {"width": 3, "height": 2, "depth": 3}, "object": [{"name": "aaa", "xmin": "bbb"}, {"name": "ccc", "xmin": "ddd"}, [3, 2]]}
     print(tostring(dict2element("annotation", d)))
